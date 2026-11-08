@@ -117,16 +117,23 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-# Middleware: Normalize path for Vercel rewrites & Authentication
+# Middleware: Normalize path for Vercel serverless & enforce API Key auth
 @app.middleware("http")
 async def vercel_path_and_auth_middleware(request: Request, call_next):
-    raw_path = request.scope.get("path", "")
+    # Determine the true requested path (checking Vercel invoke headers)
+    raw_path = (
+        request.headers.get("x-invoke-path")
+        or request.headers.get("x-matched-path")
+        or request.scope.get("path", "")
+    )
 
-    # Strip /api/index.py or /api/index prefix added by Vercel rewrites
     clean_path = raw_path
-    for prefix in ["/api/index.py", "/api/index"]:
-        if clean_path.startswith(prefix):
+    for prefix in ["/api/index.py", "/api/index", "/api"]:
+        if clean_path.startswith(prefix) and len(clean_path) > len(prefix):
             clean_path = clean_path[len(prefix):]
+            break
+        elif clean_path == prefix:
+            clean_path = "/"
             break
 
     if not clean_path:
@@ -135,10 +142,9 @@ async def vercel_path_and_auth_middleware(request: Request, call_next):
     # Update scope path so FastAPI routing matches properly
     request.scope["path"] = clean_path
 
-    # Public routes
+    # Public routes (exempt from X-API-Key)
     if (
         clean_path == "/"
-        or clean_path == ""
         or clean_path == "/health"
         or clean_path == "/docs"
         or clean_path == "/openapi.json"
