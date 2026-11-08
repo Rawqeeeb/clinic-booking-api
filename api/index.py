@@ -91,6 +91,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     openapi_url="/openapi.json",
+    redirect_slashes=False,
 )
 
 
@@ -116,20 +117,34 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-# Middleware: Authentication & Public Path Exemption
+# Middleware: Normalize path for Vercel rewrites & Authentication
 @app.middleware("http")
-async def api_key_auth_middleware(request: Request, call_next):
-    path = request.url.path
+async def vercel_path_and_auth_middleware(request: Request, call_next):
+    raw_path = request.scope.get("path", "")
+
+    # Strip /api/index.py or /api/index prefix added by Vercel rewrites
+    clean_path = raw_path
+    for prefix in ["/api/index.py", "/api/index"]:
+        if clean_path.startswith(prefix):
+            clean_path = clean_path[len(prefix):]
+            break
+
+    if not clean_path:
+        clean_path = "/"
+
+    # Update scope path so FastAPI routing matches properly
+    request.scope["path"] = clean_path
+
     # Public routes
     if (
-        path == ""
-        or path == "/"
-        or path == "/health"
-        or path == "/docs"
-        or path == "/openapi.json"
-        or path == "/redoc"
-        or path.startswith("/static")
-        or path.startswith("/favicon")
+        clean_path == "/"
+        or clean_path == ""
+        or clean_path == "/health"
+        or clean_path == "/docs"
+        or clean_path == "/openapi.json"
+        or clean_path == "/redoc"
+        or clean_path.startswith("/static")
+        or clean_path.startswith("/favicon")
     ):
         return await call_next(request)
 
@@ -155,6 +170,7 @@ for s_dir in static_candidates:
 
 
 @app.get("/", include_in_schema=False)
+@app.get("", include_in_schema=False)
 async def serve_index():
     for candidate in [
         ROOT_DIR / "static" / "index.html",
@@ -264,7 +280,6 @@ async def create_booking(
             detail="Invalid JSON payload",
         )
 
-    # Validate required fields
     slot_id = str(body_json.get("slot_id", "")).strip()
     name = str(body_json.get("name", "")).strip()
     email_raw = str(body_json.get("email", "")).strip()
