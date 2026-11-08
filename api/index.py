@@ -1,18 +1,28 @@
+import os
+import sys
+from pathlib import Path
+
+# Ensure project root and api directory are in sys.path for Vercel Serverless
+CURRENT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = CURRENT_DIR.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(0, str(CURRENT_DIR))
+
 import base64
 import hashlib
 import json
-import os
 import re
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -30,7 +40,7 @@ from models import (
 
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY", "koya-secret-key-2026").strip()
+API_KEY = os.getenv("API_KEY", "koya-secret-key-2026").strip().strip('"').strip("'")
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 
@@ -68,7 +78,10 @@ def decode_cursor(cursor_str: str) -> tuple[datetime, str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Startup warning: Database initialization: {e}")
     yield
 
 
@@ -109,7 +122,8 @@ async def api_key_auth_middleware(request: Request, call_next):
     path = request.url.path
     # Public routes
     if (
-        path == "/"
+        path == ""
+        or path == "/"
         or path == "/health"
         or path == "/docs"
         or path == "/openapi.json"
@@ -130,19 +144,26 @@ async def api_key_auth_middleware(request: Request, call_next):
 
 
 # Mount static assets if folder exists
-static_dir = Path(__file__).resolve().parent.parent / "static"
-if static_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+static_candidates = [
+    ROOT_DIR / "static",
+    CURRENT_DIR / "static",
+]
+for s_dir in static_candidates:
+    if s_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(s_dir)), name="static")
+        break
 
 
 @app.get("/", include_in_schema=False)
 async def serve_index():
-    index_file = static_dir / "index.html"
-    if index_file.exists():
-        return FileResponse(str(index_file))
-    return JSONResponse(
-        {"status": "ok", "message": "Clinic Booking API is running"}
-    )
+    for candidate in [
+        ROOT_DIR / "static" / "index.html",
+        CURRENT_DIR / "static" / "index.html",
+        Path.cwd() / "static" / "index.html",
+    ]:
+        if candidate.exists():
+            return HTMLResponse(content=candidate.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>Clinic Booking API is running</h1><p><a href='/docs'>Swagger API Docs</a></p>")
 
 
 @app.get("/health", tags=["Health"])
@@ -234,7 +255,6 @@ async def create_booking(
     request: Request,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
 ):
-    # Read raw body bytes for idempotency hashing
     raw_body = await request.body()
     try:
         body_json = json.loads(raw_body.decode("utf-8")) if raw_body else {}
@@ -281,7 +301,6 @@ async def create_booking(
         ).fetchall()
 
         if len(attempts) >= 5:
-            # 6th or higher attempt within the 1-minute window
             conn.execute(
                 text(
                     """
@@ -299,7 +318,6 @@ async def create_booking(
                 content={"error": "Too many booking attempts for this email"},
             )
 
-        # Record this attempt (failed attempts included)
         conn.execute(
             text(
                 """
@@ -328,7 +346,6 @@ async def create_booking(
 
             if existing:
                 if existing["request_hash"] == request_hash:
-                    # Return exact cached response
                     return Response(
                         content=existing["response_body"],
                         status_code=existing["status_code"],
@@ -345,7 +362,6 @@ async def create_booking(
     created_at = datetime.now(timezone.utc)
 
     with get_db() as conn:
-        # Check slot existence and start time
         slot_row = conn.execute(
             text("SELECT id, start_time, is_booked FROM slots WHERE id = :id"),
             {"id": slot_id},
@@ -364,7 +380,6 @@ async def create_booking(
                 detail="Slot has already started",
             )
 
-        # Atomic conditional update
         updated_slot = conn.execute(
             text(
                 """
@@ -415,7 +430,6 @@ async def create_booking(
         )
         response_json = booking_obj.model_dump_json()
 
-        # Save idempotency record inside the same transaction
         if idempotency_key:
             conn.execute(
                 text(
@@ -588,13 +602,11 @@ async def cancel_booking(id: str):
 
         slot_id = row["slot_id"]
 
-        # Cancel booking
         conn.execute(
             text("UPDATE bookings SET status = 'cancelled' WHERE id = :id;"),
             {"id": id},
         )
 
-        # Free the slot
         conn.execute(
             text("UPDATE slots SET is_booked = FALSE WHERE id = :slot_id;"),
             {"slot_id": slot_id},

@@ -1,4 +1,5 @@
 import os
+import tempfile
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,10 +10,11 @@ from sqlalchemy.pool import NullPool, StaticPool
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip().strip('"').strip("'")
 
 if not DATABASE_URL:
-    db_path = Path(__file__).resolve().parent / "clinic.db"
+    tmp_dir = Path(tempfile.gettempdir())
+    db_path = tmp_dir / "clinic.db"
     DATABASE_URL = f"sqlite:///{db_path.as_posix()}"
 elif DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
@@ -89,7 +91,7 @@ def init_db():
             )
         )
 
-        # Partial unique index for concurrency safety (Zero double-booking)
+        # Partial unique index for concurrency safety
         conn.execute(
             text(
                 """
