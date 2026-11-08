@@ -1,0 +1,456 @@
+{
+ "openapi": "3.0.3",
+ "info": {
+  "title": "Clinic booking API",
+  "version": "1.0",
+  "description": "The exact contract for Task 1 of the Koya Cohort 4 assessment. Build these endpoints so our checks can talk to your API.\n\nEverything is JSON. Each endpoint says which level it belongs to. Every error response looks like `{\"error\": \"<message>\"}`.\n\nEvery request needs the `X-API-Key` header (level 2). A missing or wrong key returns **401**."
+ },
+ "components": {
+  "securitySchemes": {
+   "apiKey": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-API-Key",
+    "description": "A key you choose. Missing or wrong: 401. (Level 2)"
+   }
+  },
+  "schemas": {
+   "Slot": {
+    "type": "object",
+    "required": [
+     "id",
+     "provider",
+     "start",
+     "end"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "example": "s1"
+     },
+     "provider": {
+      "type": "string",
+      "example": "Dr Ade"
+     },
+     "start": {
+      "type": "string",
+      "format": "date-time",
+      "example": "2026-12-10T09:00:00Z"
+     },
+     "end": {
+      "type": "string",
+      "format": "date-time",
+      "example": "2026-12-10T09:30:00Z"
+     }
+    }
+   },
+   "SlotWithAvailability": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Slot"
+     },
+     {
+      "type": "object",
+      "required": [
+       "available"
+      ],
+      "properties": {
+       "available": {
+        "type": "boolean",
+        "description": "false while the slot has a confirmed booking"
+       }
+      }
+     }
+    ]
+   },
+   "NewBooking": {
+    "type": "object",
+    "required": [
+     "slot_id",
+     "name",
+     "email"
+    ],
+    "properties": {
+     "slot_id": {
+      "type": "string",
+      "example": "s1"
+     },
+     "name": {
+      "type": "string",
+      "example": "Ada Obi"
+     },
+     "email": {
+      "type": "string",
+      "example": "ada@example.com"
+     }
+    }
+   },
+   "Booking": {
+    "type": "object",
+    "required": [
+     "id",
+     "slot_id",
+     "name",
+     "email",
+     "status",
+     "created_at"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "Any unique id you generate"
+     },
+     "slot_id": {
+      "type": "string",
+      "example": "s1"
+     },
+     "name": {
+      "type": "string",
+      "example": "Ada Obi"
+     },
+     "email": {
+      "type": "string",
+      "example": "ada@example.com"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "confirmed",
+       "cancelled"
+      ]
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "Error": {
+    "type": "object",
+    "required": [
+     "error"
+    ],
+    "properties": {
+     "error": {
+      "type": "string",
+      "example": "slot not found"
+     }
+    }
+   }
+  }
+ },
+ "security": [
+  {
+   "apiKey": []
+  }
+ ],
+ "paths": {
+  "/reset": {
+   "post": {
+    "summary": "Level 1 \u00b7 Replace all slots",
+    "description": "Deletes every booking and replaces all slots with the ones you send, including slots in the past.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "slots"
+        ],
+        "properties": {
+         "slots": {
+          "type": "array",
+          "items": {
+           "$ref": "#/components/schemas/Slot"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Done"
+     }
+    }
+   }
+  },
+  "/slots": {
+   "get": {
+    "summary": "Level 1 \u00b7 List slots",
+    "description": "Every slot, earliest `start` first.",
+    "parameters": [
+     {
+      "name": "provider",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Only this provider's slots (exact match)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "The slots",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "slots": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/SlotWithAvailability"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/bookings": {
+   "post": {
+    "summary": "Book a slot (levels 1\u20135)",
+    "description": "**Level 1:** returns 201 with the booking, status `confirmed`.\n\n**Level 2:** **400** if `slot_id`, `name` or `email` is missing or empty, or the email isn't valid. **404** if the slot doesn't exist. **400** if the slot has already started. Trim spaces from `name` and `email`, and store `email` in lower case.\n\n**Level 3:** a slot that already has a confirmed booking returns **409**. This must hold when many requests arrive at the same moment.\n\n**Level 4:** the optional `Idempotency-Key` header. The same key with the same body returns the same response (same status code, same booking `id`) and never creates a second booking. The same key with a different body returns **422**.\n\n**Level 5:** at most 5 attempts per email per minute, failed attempts included. The 6th returns **429** with a `Retry-After` header in whole seconds. Other emails aren't affected.",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Level 4"
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NewBooking"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Booked",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Booking"
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Missing or invalid field, or the slot has already started (level 2)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The slot doesn't exist (level 2)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Slot already booked (level 3)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Idempotency-Key reused with a different body (level 4)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Too many attempts for this email (level 5)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      },
+      "headers": {
+       "Retry-After": {
+        "schema": {
+         "type": "integer"
+        },
+        "description": "Seconds to wait"
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "Level 4 \u00b7 List a person's bookings",
+    "description": "That person's bookings, oldest first. The email match ignores case. Use cursor pagination: pass `next_cursor` back as `cursor` to get the next page. The last page has `next_cursor: null`.",
+    "parameters": [
+     {
+      "name": "email",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 50,
+       "default": 10
+      },
+      "description": "1 to 50. Anything else returns 400."
+     },
+     {
+      "name": "cursor",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "A page of bookings",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "bookings": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Booking"
+           }
+          },
+          "next_cursor": {
+           "type": "string",
+           "nullable": true
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Invalid limit",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/bookings/{id}": {
+   "parameters": [
+    {
+     "name": "id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "get": {
+    "summary": "Level 1 \u00b7 Get a booking",
+    "responses": {
+     "200": {
+      "description": "The booking",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Booking"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "No booking with that id",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Level 3 \u00b7 Cancel a booking",
+    "description": "Sets `status` to `cancelled` and frees the slot.",
+    "responses": {
+     "200": {
+      "description": "The cancelled booking",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Booking"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "No booking with that id",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Already cancelled",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}
