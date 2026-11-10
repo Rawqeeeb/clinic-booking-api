@@ -40,7 +40,7 @@ from models import (
 
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY", "koya-secret-key-2026").strip().strip('"').strip("'")
+API_KEY = os.getenv("API_KEY", "dev-test-key").strip().strip('"').strip("'")
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 

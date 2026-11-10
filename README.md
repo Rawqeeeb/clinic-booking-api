@@ -25,7 +25,7 @@ pip install -r requirements.txt
 ### 2. Environment Variables
 Copy `.env.example` to `.env`:
 ```bash
-API_KEY=koya-secret-key-2026
+API_KEY=your-secret-api-key-here
 # Optional: PostgreSQL URL (defaults to local SQLite if omitted)
 # DATABASE_URL=postgresql://user:password@host/neondb?sslmode=require
 ```
