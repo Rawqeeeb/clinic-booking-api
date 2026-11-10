@@ -3,265 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinic Appointment Booking</title>
+  <title>Apex Health Clinic &bull; Doctor Appointments</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
 
-  <!-- Navigation / Top Header -->
-  <header class="bg-indigo-900 text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center space-x-3">
-        <div class="bg-indigo-500 p-2 rounded-lg text-white">
-          <i class="fa-solid fa-hospital-user text-2xl"></i>
+        <div class="bg-emerald-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shadow-emerald-200">
+          <i class="fa-solid fa-staff-snake text-xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">Koya Clinic Appointment Booking</h1>
-          <p class="text-xs text-indigo-200">Assessment API &bull; Levels 1 &ndash; 5 Full Stack Demo</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-slate-900 tracking-tight">Apex Medical Center</h1>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Open Today
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Fast, confidential doctor consultations &bull; Online scheduling</p>
         </div>
       </div>
 
-      <!-- API Key Configuration Bar -->
-      <div class="flex items-center bg-indigo-950/70 p-2 rounded-lg border border-indigo-700/50">
-        <label for="apiKeyInput" class="text-xs font-medium text-indigo-300 mr-2 flex items-center">
-          <i class="fa-solid fa-key mr-1.5 text-amber-400"></i> X-API-Key:
-        </label>
-        <div class="relative flex items-center">
-          <input 
-            id="apiKeyInput" 
-            type="password" 
-            class="bg-indigo-900 border border-indigo-600 rounded px-3 py-1 pr-7 text-xs text-white placeholder-indigo-400 focus:outline-none focus:ring-1 focus:ring-amber-400 w-40 sm:w-52"
-            placeholder="Enter API Key..."
-            oninput="saveApiKeyToStorage()"
-          >
-          <button 
-            type="button" 
-            onclick="toggleApiKeyVisibility()" 
-            class="absolute right-2 text-indigo-400 hover:text-white text-xs focus:outline-none"
-            title="Toggle visibility"
-          >
-            <i id="apiKeyEyeIcon" class="fa-solid fa-eye"></i>
-          </button>
-        </div>
-        <span id="authStatusBadge" class="ml-2 text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">No Key</span>
+      <!-- Quick Actions -->
+      <div class="flex items-center space-x-3">
+        <a href="/docs" target="_blank" class="text-xs text-slate-600 hover:text-emerald-700 font-medium px-3 py-1.5 rounded-lg border border-slate-200 hover:border-emerald-300 bg-slate-50 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-code text-slate-400"></i> API Docs
+        </a>
+        <button onclick="switchTab('manageTab')" class="text-xs text-emerald-700 hover:bg-emerald-50 font-medium px-3 py-1.5 rounded-lg border border-emerald-300 transition flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar-check"></i> My Appointments
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Notification Banner -->
-  <div id="alertBanner" class="hidden max-w-7xl mx-auto mt-4 px-4 w-full">
-    <div id="alertBox" class="p-4 rounded-lg flex items-center justify-between text-sm shadow">
-      <div class="flex items-center space-x-2">
-        <i id="alertIcon" class="fa-solid fa-circle-info"></i>
-        <span id="alertMessage"></span>
+  <!-- Hero Banner -->
+  <section class="bg-gradient-to-r from-emerald-800 to-teal-900 text-white py-10 px-4 sm:px-6 lg:px-8 shadow-inner">
+    <div class="max-w-7xl mx-auto">
+      <div class="max-w-3xl">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-700/60 text-emerald-200 mb-3 border border-emerald-600/40">
+          Expert Clinical Care
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">Book Your Doctor Consultation</h2>
+        <p class="text-sm text-emerald-100 max-w-2xl leading-relaxed">
+          Select an available time slot with our certified physicians. Instant confirmation with zero waiting lines.
+        </p>
       </div>
-      <button onclick="dismissAlert()" class="text-slate-400 hover:text-slate-600">
+    </div>
+  </section>
+
+  <!-- Notification Banner -->
+  <div id="alertBanner" class="hidden max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 w-full">
+    <div id="alertBox" class="p-4 rounded-xl flex items-center justify-between text-sm shadow-sm transition">
+      <div class="flex items-center space-x-2.5">
+        <i id="alertIcon" class="fa-solid fa-circle-info text-base"></i>
+        <span id="alertMessage" class="font-medium"></span>
+      </div>
+      <button onclick="dismissAlert()" class="text-slate-400 hover:text-slate-600 transition">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
   </div>
 
-  <!-- Main Content Grid -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+  <!-- Main Content Area -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
     
     <!-- Tab Navigation -->
-    <div class="flex border-b border-slate-200 mb-6 space-x-4">
-      <button onclick="switchTab('slotsTab')" id="tab-slotsTab" class="tab-btn pb-3 px-2 border-b-2 font-medium text-sm border-indigo-600 text-indigo-600 flex items-center gap-2">
-        <i class="fa-regular fa-calendar-check"></i> Available Slots
+    <div class="flex border-b border-slate-200 mb-8 space-x-6 text-sm">
+      <button onclick="switchTab('slotsTab')" id="tab-slotsTab" class="tab-btn pb-3 border-b-2 font-semibold border-emerald-600 text-emerald-700 flex items-center gap-2 transition">
+        <i class="fa-solid fa-stethoscope"></i> Available Appointments
       </button>
-      <button onclick="switchTab('bookTab')" id="tab-bookTab" class="tab-btn pb-3 px-2 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2">
-        <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+      <button onclick="switchTab('bookTab')" id="tab-bookTab" class="tab-btn pb-3 border-b-2 font-medium border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-calendar-plus"></i> Book Consultation
       </button>
-      <button onclick="switchTab('manageTab')" id="tab-manageTab" class="tab-btn pb-3 px-2 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2">
-        <i class="fa-solid fa-magnifying-glass"></i> Manage &amp; Lookup
+      <button onclick="switchTab('manageTab')" id="tab-manageTab" class="tab-btn pb-3 border-b-2 font-medium border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition">
+        <i class="fa-solid fa-user-clock"></i> Manage Appointments
       </button>
     </div>
 
     <!-- TAB 1: AVAILABLE SLOTS -->
     <section id="slotsTab" class="tab-content block">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">Clinic Appointment Slots</h2>
-            <p class="text-xs text-slate-500">Real-time slot availability. Earliest start first.</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <select id="providerFilter" onchange="loadSlots()" class="text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-indigo-500">
-              <option value="">All Providers</option>
-              <option value="Dr Ade">Dr Ade</option>
-              <option value="Dr Okafor">Dr Okafor</option>
-              <option value="Dr Smith">Dr Smith</option>
-            </select>
-            <button onclick="loadSlots()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
-              <i class="fa-solid fa-arrows-rotate"></i> Refresh
-            </button>
-          </div>
+      
+      <!-- Filter Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Upcoming Clinic Availability</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Slots are refreshed continuously. Choose your preferred physician.</p>
         </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <select id="providerFilter" onchange="loadSlots()" class="text-xs bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-8 py-2 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="">All Specialists</option>
+              <option value="Dr Ade">Dr. Ade (General Medicine)</option>
+              <option value="Dr Okafor">Dr. Okafor (Pediatrics)</option>
+              <option value="Dr Smith">Dr. Smith (Cardiology)</option>
+            </select>
+          </div>
+          <button onclick="loadSlots()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+        </div>
+      </div>
 
-        <!-- Slots Container -->
-        <div id="slotsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Dynamically populated -->
-          <div class="col-span-full py-12 text-center text-slate-400">Loading available slots...</div>
+      <!-- Slots Grid -->
+      <div id="slotsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="col-span-full py-16 text-center text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-2xl text-emerald-600 mb-2"></i>
+          <p class="text-sm">Loading available doctor appointments...</p>
         </div>
       </div>
     </section>
 
-    <!-- TAB 2: BOOK APPOINTMENT -->
+    <!-- TAB 2: BOOK CONSULTATION FORM -->
     <section id="bookTab" class="tab-content hidden">
-      <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-lg font-bold text-slate-900 mb-1">Book an Appointment</h2>
-        <p class="text-xs text-slate-500 mb-6">Includes atomic lock prevention and idempotency guarantee.</p>
+      <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+          <div class="bg-emerald-100 text-emerald-700 w-10 h-10 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-calendar-check text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Patient Consultation Form</h3>
+            <p class="text-xs text-slate-500">Please provide your details to confirm your visit.</p>
+          </div>
+        </div>
 
         <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Selected Slot ID</label>
-            <input 
-              id="bookSlotId" 
-              type="text" 
-              required
-              placeholder="e.g. slot_20261210_0_0" 
-              class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-indigo-500"
-            >
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              Appointment Slot Reference
+            </label>
+            <div class="relative">
+              <input 
+                id="bookSlotId" 
+                type="text" 
+                required
+                placeholder="Click an appointment from the slots tab" 
+                class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-mono text-xs"
+              >
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Select a slot from the "Available Appointments" tab to auto-fill.</p>
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Patient Full Name</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              Patient Full Name
+            </label>
             <input 
               id="bookName" 
               type="text" 
               required
-              placeholder="e.g. Ada Obi" 
-              class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-indigo-500"
+              placeholder="e.g. Sarah Connor" 
+              class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
             >
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Patient Email Address</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              Email Address (For Appointment Confirmation)
+            </label>
             <input 
               id="bookEmail" 
               type="email" 
               required
-              placeholder="e.g. ada@example.com" 
-              class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-indigo-500"
+              placeholder="e.g. sarah@example.com" 
+              class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
             >
           </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-semibold uppercase tracking-wider text-slate-600">
-                Idempotency-Key <span class="text-slate-400 font-normal">(Level 4)</span>
-              </label>
-              <button type="button" onclick="generateNewIdempotencyKey()" class="text-xs text-indigo-600 hover:text-indigo-800">
-                <i class="fa-solid fa-shuffle"></i> Regeneate
-              </button>
-            </div>
-            <input 
-              id="bookIdempotencyKey" 
-              type="text" 
-              class="w-full text-xs font-mono bg-slate-100 border border-slate-300 rounded-lg p-2.5 text-slate-700"
-            >
-          </div>
+          <!-- Hidden idempotency key generator for robust submission protection -->
+          <input id="bookIdempotencyKey" type="hidden">
 
           <button 
             type="submit" 
             id="bookSubmitBtn"
-            class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg text-sm shadow transition flex items-center justify-center gap-2"
+            class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl text-sm shadow-md shadow-emerald-200 transition flex items-center justify-center gap-2"
           >
-            <i class="fa-solid fa-check"></i> Confirm &amp; Book Appointment
+            <i class="fa-solid fa-check-circle"></i> Confirm Appointment
           </button>
         </form>
 
-        <!-- Booking Result Modal/Box -->
-        <div id="bookingResultBox" class="hidden mt-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
-          <div class="flex items-center gap-2 text-emerald-800 font-semibold text-sm mb-2">
-            <i class="fa-solid fa-circle-check text-emerald-600"></i> Appointment Confirmed!
+        <!-- Booking Result Card -->
+        <div id="bookingResultBox" class="hidden mt-6 p-5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">
+          <div class="flex items-center gap-2 text-emerald-900 font-bold text-sm mb-3">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i> Appointment Successfully Confirmed!
           </div>
-          <div id="bookingResultDetails" class="text-xs text-emerald-950 font-mono space-y-1"></div>
+          <div id="bookingResultDetails" class="text-xs text-emerald-950 space-y-1.5 bg-white p-4 rounded-lg border border-emerald-100 font-mono"></div>
+          <button onclick="switchTab('manageTab')" class="mt-3 text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1">
+            View in My Appointments &rarr;
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- TAB 3: MANAGE & LOOKUP -->
+    <!-- TAB 3: MANAGE APPOINTMENTS -->
     <section id="manageTab" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        <!-- Lookup single booking by ID -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 class="text-lg font-bold text-slate-900 mb-1">Lookup Booking by ID</h2>
-          <p class="text-xs text-slate-500 mb-4">View status or cancel confirmed bookings.</p>
+        <!-- Search by Email (Patient History) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-7">
+          <div class="flex items-center gap-2.5 mb-1">
+            <div class="bg-teal-100 text-teal-700 w-8 h-8 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-address-book"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">Patient Appointments</h3>
+          </div>
+          <p class="text-xs text-slate-500 mb-5">Enter your email to view all your scheduled consultations.</p>
+
+          <div class="flex gap-2 mb-5">
+            <input 
+              id="listEmailInput" 
+              type="email" 
+              placeholder="e.g. sarah@example.com" 
+              class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+            <button onclick="startBookingsSearch()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+              Find Appointments
+            </button>
+          </div>
+
+          <div id="emailBookingsList" class="space-y-3 mb-4">
+            <div class="text-center py-12 text-xs text-slate-400">
+              <i class="fa-regular fa-folder-open text-2xl text-slate-300 mb-2 block"></i>
+              Enter your email address to review your appointment history.
+            </div>
+          </div>
+
+          <!-- Pagination controls -->
+          <div id="paginationControls" class="hidden flex justify-between items-center pt-3 border-t border-slate-100 text-xs">
+            <span id="pageInfo" class="text-slate-500 font-medium">Appointments page</span>
+            <button id="nextPageBtn" onclick="loadNextPage()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium text-slate-700 disabled:opacity-40 transition">
+              Next &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- Lookup single booking by Reference ID -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-7">
+          <div class="flex items-center gap-2.5 mb-1">
+            <div class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">Lookup by Booking Reference</h3>
+          </div>
+          <p class="text-xs text-slate-500 mb-5">Look up individual appointment details or cancel a booking.</p>
           
-          <div class="flex gap-2 mb-4">
+          <div class="flex gap-2 mb-5">
             <input 
               id="lookupBookingId" 
               type="text" 
-              placeholder="e.g. b_a1b2c3d4e5f6" 
-              class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-indigo-500"
+              placeholder="e.g. b_3c13619d24f0" 
+              class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs"
             >
-            <button onclick="fetchBookingById()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">
+            <button onclick="fetchBookingById()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-sm transition">
               Lookup
             </button>
           </div>
 
-          <div id="singleBookingDetails" class="hidden border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
+          <div id="singleBookingDetails" class="hidden border border-slate-200 rounded-xl p-5 bg-slate-50 space-y-4">
             <div class="flex justify-between items-center">
               <span id="detailStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full"></span>
               <span id="detailId" class="text-xs font-mono text-slate-500"></span>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="grid grid-cols-2 gap-3 text-xs bg-white p-3.5 rounded-lg border border-slate-200">
               <div>
-                <span class="text-slate-400 block">Patient Name</span>
-                <span id="detailName" class="font-medium text-slate-800"></span>
+                <span class="text-slate-400 block text-[11px]">Patient Name</span>
+                <span id="detailName" class="font-semibold text-slate-800 text-sm"></span>
               </div>
               <div>
-                <span class="text-slate-400 block">Patient Email</span>
-                <span id="detailEmail" class="font-medium text-slate-800"></span>
+                <span class="text-slate-400 block text-[11px]">Patient Email</span>
+                <span id="detailEmail" class="font-medium text-slate-700"></span>
               </div>
               <div>
-                <span class="text-slate-400 block">Slot ID</span>
-                <span id="detailSlotId" class="font-medium text-slate-800"></span>
+                <span class="text-slate-400 block text-[11px]">Appointment Slot</span>
+                <span id="detailSlotId" class="font-mono text-slate-700"></span>
               </div>
               <div>
-                <span class="text-slate-400 block">Booked At</span>
-                <span id="detailCreatedAt" class="font-medium text-slate-800"></span>
+                <span class="text-slate-400 block text-[11px]">Date Booked</span>
+                <span id="detailCreatedAt" class="font-medium text-slate-700"></span>
               </div>
             </div>
-            <div class="pt-2 border-t border-slate-200">
-              <button id="cancelBookingBtn" onclick="cancelCurrentBooking()" class="w-full py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-ban"></i> Cancel Booking (Free Slot)
+            <div class="pt-2">
+              <button id="cancelBookingBtn" onclick="cancelCurrentBooking()" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-ban"></i> Cancel This Appointment (Free Slot)
               </button>
             </div>
-          </div>
-        </div>
-
-        <!-- List bookings by Email with Cursor Pagination -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 class="text-lg font-bold text-slate-900 mb-1">List Bookings by Email</h2>
-          <p class="text-xs text-slate-500 mb-4">Cursor-based pagination (Level 4).</p>
-
-          <div class="flex gap-2 mb-4">
-            <input 
-              id="listEmailInput" 
-              type="email" 
-              placeholder="ada@example.com" 
-              class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 focus:ring-1 focus:ring-indigo-500"
-            >
-            <button onclick="startBookingsSearch()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">
-              Search
-            </button>
-          </div>
-
-          <div id="emailBookingsList" class="space-y-2 mb-4">
-            <div class="text-center py-8 text-xs text-slate-400">Search an email to view patient history.</div>
-          </div>
-
-          <!-- Pagination controls -->
-          <div id="paginationControls" class="hidden flex justify-between items-center pt-2 border-t border-slate-200 text-xs">
-            <span id="pageInfo" class="text-slate-500">Showing page</span>
-            <button id="nextPageBtn" onclick="loadNextPage()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded font-medium text-slate-700 disabled:opacity-50">
-              Next Page &rarr;
-            </button>
           </div>
         </div>
 
@@ -270,46 +298,31 @@
 
   </main>
 
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-    Koya Cohort 4 Assessment &bull; FastAPI + PostgreSQL &bull; Fully Automated Spec Compliant
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-heart-pulse text-emerald-600"></i>
+        <span>&copy; Apex Health Clinic &bull; All Rights Reserved</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span>Confidential &amp; Secure</span>
+        <a href="/docs" class="text-slate-600 hover:underline">REST API Documentation</a>
+      </div>
+    </div>
   </footer>
 
   <!-- Application Logic -->
   <script>
     let currentNextCursor = null;
-    let cursorHistory = [];
     let currentEmailSearch = "";
     let loadedBooking = null;
 
-    function getApiKey() {
-      return document.getElementById("apiKeyInput").value.trim();
-    }
-
-    function saveApiKeyToStorage() {
-      const key = getApiKey();
-      const badge = document.getElementById("authStatusBadge");
-      if (key) {
-        sessionStorage.setItem("clinic_api_key", key);
-        badge.className = "ml-2 text-xs px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-300 border border-emerald-700";
-        badge.textContent = "Key Set";
-      } else {
-        sessionStorage.removeItem("clinic_api_key");
-        badge.className = "ml-2 text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700";
-        badge.textContent = "No Key";
-      }
-    }
-
-    function toggleApiKeyVisibility() {
-      const input = document.getElementById("apiKeyInput");
-      const icon = document.getElementById("apiKeyEyeIcon");
-      if (input.type === "password") {
-        input.type = "text";
-        icon.className = "fa-solid fa-eye-slash";
-      } else {
-        input.type = "password";
-        icon.className = "fa-solid fa-eye";
-      }
-    }
+    const doctorSpecialties = {
+      "Dr Ade": { specialty: "General Medicine", icon: "fa-user-doctor", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+      "Dr Okafor": { specialty: "Pediatrics & Family Health", icon: "fa-baby", badge: "bg-purple-50 text-purple-700 border-purple-200" },
+      "Dr Smith": { specialty: "Cardiology & Internal Care", icon: "fa-heart-pulse", badge: "bg-rose-50 text-rose-700 border-rose-200" }
+    };
 
     function showAlert(message, type = "info") {
       const banner = document.getElementById("alertBanner");
@@ -320,16 +333,16 @@
       banner.classList.remove("hidden");
       msg.textContent = message;
 
-      box.className = "p-4 rounded-lg flex items-center justify-between text-sm shadow ";
+      box.className = "p-4 rounded-xl flex items-center justify-between text-sm shadow-sm ";
       if (type === "error") {
-        box.classList.add("bg-red-50", "text-red-800", "border", "border-red-200");
+        box.classList.add("bg-red-50", "text-red-900", "border", "border-red-200");
         icon.className = "fa-solid fa-circle-exclamation text-red-600";
       } else if (type === "success") {
-        box.classList.add("bg-emerald-50", "text-emerald-800", "border", "border-emerald-200");
+        box.classList.add("bg-emerald-50", "text-emerald-900", "border", "border-emerald-200");
         icon.className = "fa-solid fa-circle-check text-emerald-600";
       } else {
-        box.classList.add("bg-indigo-50", "text-indigo-800", "border", "border-indigo-200");
-        icon.className = "fa-solid fa-circle-info text-indigo-600";
+        box.classList.add("bg-slate-100", "text-slate-900", "border", "border-slate-300");
+        icon.className = "fa-solid fa-circle-info text-slate-600";
       }
     }
 
@@ -340,14 +353,14 @@
     function switchTab(tabId) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
       document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("border-indigo-600", "text-indigo-600");
-        btn.classList.add("border-transparent", "text-slate-500");
+        btn.classList.remove("border-emerald-600", "text-emerald-700", "font-semibold");
+        btn.classList.add("border-transparent", "text-slate-500", "font-medium");
       });
 
       document.getElementById(tabId).classList.remove("hidden");
       const activeBtn = document.getElementById("tab-" + tabId);
-      activeBtn.classList.remove("border-transparent", "text-slate-500");
-      activeBtn.classList.add("border-indigo-600", "text-indigo-600");
+      activeBtn.classList.remove("border-transparent", "text-slate-500", "font-medium");
+      activeBtn.classList.add("border-emerald-600", "text-emerald-700", "font-semibold");
 
       if (tabId === "slotsTab") {
         loadSlots();
@@ -356,16 +369,21 @@
 
     function generateNewIdempotencyKey() {
       const key = "key-" + crypto.randomUUID();
-      document.getElementById("bookIdempotencyKey").value = key;
+      const input = document.getElementById("bookIdempotencyKey");
+      if (input) input.value = key;
     }
 
-    // Load Slots from GET /slots
+    // Load available slots
     async function loadSlots() {
       const container = document.getElementById("slotsContainer");
       const provider = document.getElementById("providerFilter").value;
-      const apiKey = getApiKey();
 
-      container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading slots...</div>`;
+      container.innerHTML = `
+        <div class="col-span-full py-16 text-center text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-2xl text-emerald-600 mb-2"></i>
+          <p class="text-sm">Fetching real-time slots...</p>
+        </div>
+      `;
 
       try {
         let url = "/slots";
@@ -373,52 +391,67 @@
           url += `?provider=${encodeURIComponent(provider)}`;
         }
 
-        const res = await fetch(url, {
-          headers: { "X-API-Key": apiKey }
-        });
-
-        if (res.status === 401) {
-          showAlert("Authentication failed: Check your X-API-Key", "error");
-          container.innerHTML = `<div class="col-span-full py-8 text-center text-red-500">401 Unauthorized: Invalid X-API-Key</div>`;
-          return;
-        }
-
+        const res = await fetch(url);
         const data = await res.json();
         const slots = data.slots || [];
 
         if (slots.length === 0) {
-          container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-500">No appointment slots found.</div>`;
+          container.innerHTML = `
+            <div class="col-span-full py-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200 p-8">
+              <i class="fa-regular fa-calendar-xmark text-3xl text-slate-300 mb-2 block"></i>
+              No appointments found for this doctor right now.
+            </div>
+          `;
           return;
         }
 
         container.innerHTML = slots.map(s => {
           const start = new Date(s.start);
           const end = new Date(s.end);
-          const timeStr = start.toLocaleDateString() + " &bull; " + start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " - " + end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          const dateStr = start.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+          const timeStr = start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " - " + end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           const isAvail = s.available;
 
+          const docMeta = doctorSpecialties[s.provider] || { specialty: "General Practice", icon: "fa-user-doctor", badge: "bg-slate-50 text-slate-700 border-slate-200" };
+
           return `
-            <div class="border rounded-xl p-4 transition ${isAvail ? 'bg-white border-slate-200 hover:border-indigo-300' : 'bg-slate-50 border-slate-200 opacity-60'}">
-              <div class="flex justify-between items-start mb-2">
-                <div>
-                  <h3 class="font-semibold text-slate-900 text-sm">${escapeHtml(s.provider)}</h3>
-                  <span class="text-xs font-mono text-slate-400">${escapeHtml(s.id)}</span>
+            <div class="bg-white border rounded-2xl p-5 shadow-sm transition hover:shadow-md ${isAvail ? 'border-slate-200 hover:border-emerald-300' : 'border-slate-200 bg-slate-50/70 opacity-60'}">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                    <i class="fa-solid ${docMeta.icon}"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(s.provider)}</h4>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full font-medium border ${docMeta.badge}">
+                      ${docMeta.specialty}
+                    </span>
+                  </div>
                 </div>
-                <span class="px-2 py-0.5 text-xs font-medium rounded-full ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
                   ${isAvail ? 'Available' : 'Booked'}
                 </span>
               </div>
-              <div class="text-xs text-slate-600 mb-4 flex items-center gap-1.5">
-                <i class="fa-regular fa-clock text-slate-400"></i> ${timeStr}
+
+              <div class="space-y-1.5 my-4 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="flex items-center gap-2">
+                  <i class="fa-regular fa-calendar text-slate-400 w-4"></i>
+                  <span class="font-medium text-slate-800">${dateStr}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="fa-regular fa-clock text-slate-400 w-4"></i>
+                  <span>${timeStr}</span>
+                </div>
               </div>
+
               <div>
                 ${isAvail ? `
-                  <button onclick="prefillBooking('${escapeHtml(s.id)}')" class="w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg text-xs transition">
-                    Book This Slot &rarr;
+                  <button onclick="prefillBooking('${escapeHtml(s.id)}')" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-calendar-plus"></i> Select &amp; Book
                   </button>
                 ` : `
-                  <button disabled class="w-full py-1.5 px-3 bg-slate-100 text-slate-400 font-medium rounded-lg text-xs cursor-not-allowed">
-                    Unavailable
+                  <button disabled class="w-full py-2 px-4 bg-slate-100 text-slate-400 font-medium rounded-xl text-xs cursor-not-allowed">
+                    Slot Filled
                   </button>
                 `}
               </div>
@@ -427,34 +460,31 @@
         }).join("");
 
       } catch (err) {
-        showAlert("Failed to load slots: " + err.message, "error");
-        container.innerHTML = `<div class="col-span-full py-8 text-center text-red-500">Error connecting to API.</div>`;
+        showAlert("Failed to load appointments: " + err.message, "error");
+        container.innerHTML = `<div class="col-span-full py-12 text-center text-red-500">Error connecting to clinic API.</div>`;
       }
     }
 
     function prefillBooking(slotId) {
       document.getElementById("bookSlotId").value = slotId;
       switchTab("bookTab");
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
 
-    // Submit Booking POST /bookings
+    // Submit appointment booking
     async function submitBooking(e) {
       e.preventDefault();
-      const apiKey = getApiKey();
       const slotId = document.getElementById("bookSlotId").value.trim();
       const name = document.getElementById("bookName").value.trim();
       const email = document.getElementById("bookEmail").value.trim();
-      const idempotencyKey = document.getElementById("bookIdempotencyKey").value.trim();
+      const idempotencyKey = document.getElementById("bookIdempotencyKey").value;
       const submitBtn = document.getElementById("bookSubmitBtn");
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Processing...`;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Securing your slot...`;
 
       try {
-        const headers = {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey
-        };
+        const headers = { "Content-Type": "application/json" };
         if (idempotencyKey) {
           headers["Idempotency-Key"] = idempotencyKey;
         }
@@ -468,45 +498,42 @@
         const data = await res.json();
 
         if (res.status === 201) {
-          showAlert(`Booking confirmed! ID: ${data.id}`, "success");
+          showAlert(`Appointment successfully confirmed! Reference: ${data.id}`, "success");
           const resultBox = document.getElementById("bookingResultBox");
           const resultDetails = document.getElementById("bookingResultDetails");
           resultBox.classList.remove("hidden");
           resultDetails.innerHTML = `
-            <div><strong>Booking ID:</strong> ${escapeHtml(data.id)}</div>
-            <div><strong>Slot ID:</strong> ${escapeHtml(data.slot_id)}</div>
+            <div><strong>Booking Reference:</strong> ${escapeHtml(data.id)}</div>
+            <div><strong>Appointment Slot:</strong> ${escapeHtml(data.slot_id)}</div>
             <div><strong>Patient:</strong> ${escapeHtml(data.name)} (${escapeHtml(data.email)})</div>
-            <div><strong>Status:</strong> ${escapeHtml(data.status)}</div>
-            <div><strong>Created:</strong> ${escapeHtml(data.created_at)}</div>
+            <div><strong>Status:</strong> <span class="text-emerald-600 font-bold">${escapeHtml(data.status.toUpperCase())}</span></div>
           `;
-          // regenerate key for next booking
           generateNewIdempotencyKey();
+        } else if (res.status === 409) {
+          showAlert("That appointment slot was just reserved by another patient. Please choose another time.", "error");
         } else if (res.status === 429) {
-          const retryAfter = res.headers.get("Retry-After") || "a few";
-          showAlert(`Rate limit exceeded! Please wait ${retryAfter} seconds. (Error: ${data.error})`, "error");
+          const retry = res.headers.get("Retry-After") || "a few";
+          showAlert(`Security limit reached: Please wait ${retry} seconds before booking again.`, "error");
         } else {
-          showAlert(`Booking failed (${res.status}): ${data.error || "Unknown error"}`, "error");
+          showAlert(`Could not complete booking: ${data.error || "Please check inputs"}`, "error");
         }
 
       } catch (err) {
         showAlert("Booking error: " + err.message, "error");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> Confirm &amp; Book Appointment`;
+        submitBtn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Confirm Appointment`;
       }
     }
 
-    // Lookup Booking GET /bookings/{id}
+    // Lookup Booking by Reference
     async function fetchBookingById() {
       const id = document.getElementById("lookupBookingId").value.trim();
       if (!id) return;
-      const apiKey = getApiKey();
       const detailBox = document.getElementById("singleBookingDetails");
 
       try {
-        const res = await fetch(`/bookings/${encodeURIComponent(id)}`, {
-          headers: { "X-API-Key": apiKey }
-        });
+        const res = await fetch(`/bookings/${encodeURIComponent(id)}`);
         const data = await res.json();
 
         if (res.status === 200) {
@@ -529,40 +556,41 @@
           }
         } else {
           detailBox.classList.add("hidden");
-          showAlert(`Lookup failed: ${data.error || "Not found"}`, "error");
+          showAlert(`Lookup failed: ${data.error || "No booking found with that ID"}`, "error");
         }
       } catch (err) {
         showAlert("Lookup error: " + err.message, "error");
       }
     }
 
-    // Cancel Booking DELETE /bookings/{id}
+    // Cancel current booking
     async function cancelCurrentBooking() {
-      if (!loadedBooking || !confirm("Are you sure you want to cancel this booking? The slot will be freed.")) return;
-      const apiKey = getApiKey();
+      if (!loadedBooking || !confirm("Are you sure you want to cancel this appointment? The doctor's slot will be freed for other patients.")) return;
 
       try {
         const res = await fetch(`/bookings/${encodeURIComponent(loadedBooking.id)}`, {
-          method: "DELETE",
-          headers: { "X-API-Key": apiKey }
+          method: "DELETE"
         });
         const data = await res.json();
 
         if (res.status === 200) {
-          showAlert("Booking cancelled successfully and slot freed.", "success");
+          showAlert("Appointment has been cancelled successfully.", "success");
           fetchBookingById();
         } else {
-          showAlert(`Cancel failed: ${data.error || "Unknown error"}`, "error");
+          showAlert(`Cancellation failed: ${data.error || "Unable to cancel"}`, "error");
         }
       } catch (err) {
-        showAlert("Cancellation error: " + err.message, "error");
+        showAlert("Error cancelling appointment: " + err.message, "error");
       }
     }
 
-    // Start Bookings Search by Email
+    // Search patient appointments by email
     function startBookingsSearch() {
       const email = document.getElementById("listEmailInput").value.trim();
-      if (!email) return;
+      if (!email) {
+        showAlert("Please enter your email to find appointments.", "info");
+        return;
+      }
       currentEmailSearch = email;
       currentNextCursor = null;
       fetchBookingsPage();
@@ -570,10 +598,13 @@
 
     async function fetchBookingsPage(cursor = null) {
       const container = document.getElementById("emailBookingsList");
-      const apiKey = getApiKey();
       const pagination = document.getElementById("paginationControls");
 
-      container.innerHTML = `<div class="text-center py-4 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Fetching bookings...</div>`;
+      container.innerHTML = `
+        <div class="text-center py-6 text-xs text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> Looking up your appointments...
+        </div>
+      `;
 
       try {
         let url = `/bookings?email=${encodeURIComponent(currentEmailSearch)}&limit=5`;
@@ -581,9 +612,7 @@
           url += `&cursor=${encodeURIComponent(cursor)}`;
         }
 
-        const res = await fetch(url, {
-          headers: { "X-API-Key": apiKey }
-        });
+        const res = await fetch(url);
         const data = await res.json();
 
         if (res.status === 200) {
@@ -591,36 +620,58 @@
           currentNextCursor = data.next_cursor;
 
           if (bookings.length === 0) {
-            container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">No bookings found for this email.</div>`;
+            container.innerHTML = `
+              <div class="text-center py-8 text-xs text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
+                No appointment history found for this email.
+              </div>
+            `;
             pagination.classList.add("hidden");
             return;
           }
 
           container.innerHTML = bookings.map(b => `
-            <div class="p-3 border border-slate-200 rounded-lg bg-slate-50 text-xs flex justify-between items-center">
+            <div class="p-3.5 border border-slate-200 rounded-xl bg-slate-50 text-xs flex justify-between items-center transition hover:bg-white hover:border-slate-300">
               <div>
-                <div class="font-medium text-slate-800">${escapeHtml(b.id)} &bull; Slot: ${escapeHtml(b.slot_id)}</div>
-                <div class="text-slate-500">${new Date(b.created_at).toLocaleString()}</div>
+                <div class="font-bold text-slate-900">${escapeHtml(b.id)} &bull; Slot: ${escapeHtml(b.slot_id)}</div>
+                <div class="text-slate-500 mt-0.5"><i class="fa-regular fa-clock mr-1 text-slate-400"></i> ${new Date(b.created_at).toLocaleString()}</div>
               </div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-                ${b.status}
-              </span>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                  ${b.status.toUpperCase()}
+                </span>
+                ${b.status === 'confirmed' ? `
+                  <button onclick="quickCancel('${escapeHtml(b.id)}')" class="text-red-600 hover:text-red-800 text-xs font-semibold px-2 py-1 rounded hover:bg-red-50 transition" title="Cancel booking">
+                    Cancel
+                  </button>
+                ` : ''}
+              </div>
             </div>
           `).join("");
 
           pagination.classList.remove("hidden");
           const nextBtn = document.getElementById("nextPageBtn");
-          if (currentNextCursor) {
-            nextBtn.disabled = false;
-          } else {
-            nextBtn.disabled = true;
-          }
+          nextBtn.disabled = !currentNextCursor;
 
         } else {
           container.innerHTML = `<div class="text-center py-4 text-xs text-red-500">${data.error || "Failed to load"}</div>`;
         }
       } catch (err) {
         showAlert("Error loading bookings: " + err.message, "error");
+      }
+    }
+
+    async function quickCancel(bookingId) {
+      if (!confirm("Are you sure you want to cancel this appointment?")) return;
+      try {
+        const res = await fetch(`/bookings/${encodeURIComponent(bookingId)}`, { method: "DELETE" });
+        if (res.status === 200) {
+          showAlert("Appointment cancelled.", "success");
+          fetchBookingsPage();
+        } else {
+          showAlert("Could not cancel appointment.", "error");
+        }
+      } catch (err) {
+        showAlert("Error: " + err.message, "error");
       }
     }
 
@@ -637,11 +688,6 @@
 
     // Init on page load
     window.addEventListener("DOMContentLoaded", () => {
-      const savedKey = sessionStorage.getItem("clinic_api_key");
-      if (savedKey) {
-        document.getElementById("apiKeyInput").value = savedKey;
-        saveApiKeyToStorage();
-      }
       generateNewIdempotencyKey();
       loadSlots();
     });

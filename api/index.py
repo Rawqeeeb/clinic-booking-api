@@ -155,13 +155,26 @@ async def vercel_path_and_auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     key = request.headers.get("X-API-Key")
-    if not key or key.strip() != API_KEY:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"error": "Invalid or missing API key"},
-        )
+    if key:
+        if key.strip() != API_KEY:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": "Invalid or missing API key"},
+            )
+        return await call_next(request)
 
-    return await call_next(request)
+    # Web UI browser session exemption (allows website visitors to use the clinic app seamlessly)
+    session = request.cookies.get("clinic_session")
+    sec_fetch_site = request.headers.get("sec-fetch-site")
+    referer = request.headers.get("referer", "")
+
+    if session == "active" or sec_fetch_site in ["same-origin", "same-site"] or (referer and request.base_url.netloc in referer):
+        return await call_next(request)
+
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"error": "Invalid or missing API key"},
+    )
 
 
 # Mount static assets if folder exists
@@ -184,8 +197,12 @@ async def serve_index():
         Path.cwd() / "static" / "index.html",
     ]:
         if candidate.exists():
-            return HTMLResponse(content=candidate.read_text(encoding="utf-8"))
-    return HTMLResponse("<h1>Clinic Booking API is running</h1><p><a href='/docs'>Swagger API Docs</a></p>")
+            resp = HTMLResponse(content=candidate.read_text(encoding="utf-8"))
+            resp.set_cookie(key="clinic_session", value="active", httponly=True, samesite="lax")
+            return resp
+    resp = HTMLResponse("<h1>Apex Health Clinic</h1><p><a href='/docs'>Swagger API Docs</a></p>")
+    resp.set_cookie(key="clinic_session", value="active", httponly=True, samesite="lax")
+    return resp
 
 
 @app.get("/health", tags=["Health"])
